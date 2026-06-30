@@ -1,7 +1,7 @@
 --[[
 	Author      : Lopapon
 	Module      : Signal
-	Description : Classe Signal (Connect, Fire, Disconnect, DisconnectAll)
+	Description : Classe Signal (Connect, Fire, Disconnect, DisconnectAll, Wait)
 ]]
 
 local Signal = {}
@@ -19,11 +19,12 @@ export type Signal = {
 	Connect: (self: Signal, callback: (...any) -> ()) -> Connection,
 	Fire: (self: Signal, ...any) -> (),
 	DisconnectAll: (self: Signal) -> (),
+	Wait: (self: Signal) -> ...any,
 }
 
 function Signal.new(): Signal
 	local self = setmetatable({}, Signal) :: Signal
-	self._connections = {} -- Liste vide où on vient stocker les callbacks connectés
+	self._connections = {}
 	return self
 end
 
@@ -40,18 +41,28 @@ function Signal:Connect(callback: (...any) -> ()): Connection
 		end
 	end
 
-	table.insert(self._connections, connection) -- On ajoute le callback à la liste
+	table.insert(self._connections, connection)
 	return connection
 end
 
-function Signal:Fire(...: any) -- Varargs permet un nombre de valeurs reçues théoriquement infini
+function Signal:Fire(...: any)
 	for _, connection in ipairs(self._connections) do
-		connection._callback(...) -- Appelle chaque callback connecté avec les arguments envoyés
+		connection._callback(...)
 	end
 end
 
 function Signal:DisconnectAll()
-	self._connections = {} -- Vide tous les joueurs d'un coup (utile au cleanup d'une run par ex)
+	self._connections = {}
+end
+
+function Signal:Wait(): ...any
+	local thread = coroutine.running()
+	local connection
+	connection = self:Connect(function(...)
+		connection:Disconnect()
+		coroutine.resume(thread, ...)
+	end)
+	return coroutine.yield()
 end
 
 return Signal
