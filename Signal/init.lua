@@ -1,8 +1,9 @@
---!strict
-
 --[[
-    Author      : Lopapon
-    Module      : Signal
-    Description : Signal builder -> Call in Nova
+	Author      : Lopapon
+	Module      : Signal (init)
+	Description : Signal builder -> Called in Nova
 ]]
 
+local Signal = require(script.Signal)
+
+return Signal
