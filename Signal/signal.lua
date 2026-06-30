@@ -51,7 +51,7 @@ function Signal:Fire(...: any) -- Varargs permet un nombre de valeurs reçues th
 end
 
 function Signal:DisconnectAll()
-	self._connections = {} -- Vide tous les abonnés d'un coup (utile au cleanup d'une run par ex)
+	self._connections = {} -- Vide tous les joueurs d'un coup (utile au cleanup d'une run par ex)
 end
 
 return Signal
