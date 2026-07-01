@@ -22,18 +22,18 @@ export type Signal = {
 	Wait: (self: Signal) -> ...any,
 }
 
-function Signal.new(): Signal
-	local self = setmetatable({}, Signal) :: Signal
+function	Signal.new()
+	local self = setmetatable({}, Signal)
 	self._connections = {}
 	return self
 end
 
-function Signal:Connect(callback: (...any) -> ()): Connection
-	local connection = {} :: Connection
+function	Signal:Connect(callback: (...any) -> ()): Connection
+	local connection = {}
 	connection._callback = callback
 	connection._signal = self
 
-	function connection:Disconnect()
+	function	connection:Disconnect()
 		local connections = self._signal._connections
 		local index = table.find(connections, self)
 		if index then
@@ -45,18 +45,18 @@ function Signal:Connect(callback: (...any) -> ()): Connection
 	return connection
 end
 
-function Signal:Fire(...: any)
+function	Signal:Fire(...: any)
 	for _, connection in ipairs(self._connections) do
 		connection._callback(...)
 	end
 end
 
-function Signal:DisconnectAll()
+function	Signal:DisconnectAll()
 	self._connections = {}
 end
 
-function Signal:Wait(): ...any
-	local thread = coroutine.running()
+function	Signal:Wait(): ...any
+	local thread = coroutine.running() --Detourne la fonction coroutine pour pouvoir simuler le comportement d'un thread version miniature
 	local connection
 	connection = self:Connect(function(...)
 		connection:Disconnect()
