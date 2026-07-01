@@ -1,9 +1,11 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --[[
 	Author      : Lopapon
 	Module      : Math (init)
 	Description : Point d'entrée du module Math -> Called in Nova
 ]]
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 
 local Math = {}
 
