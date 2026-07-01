@@ -5,7 +5,12 @@
 
 ## Patch Notes
 
-### v0.3.0 — Nova.Math (current)
+### v0.4.0 — Nova.Table (current)
+- Ajout du module `Table` avec 3 sous-modules : `Copy`, `Mutation`, `Search`
+- 11 fonctions utilitaires pour la manipulation de tables
+- Mise à jour de `Nova/init.lua` avec `Nova.Table`
+
+### v0.3.0 — Nova.Math
 - Ajout du module `Math` avec 5 sous-modules : `Interpolation`, `Clamp`, `Rounding`, `Geometry`, `Random`
 - 19 fonctions utilitaires couvrant les besoins d'un survivor-like
 - Fix collision de noms sur `Random.new()` (capture du built-in avant déclaration de la table locale)
@@ -28,17 +33,22 @@
 ```
 ReplicatedStorage/
 └── Nova/
-    ├── init.lua              ← Point d'entrée principal (Nova.Signal, Nova.Math, ...)
+    ├── init.lua              ← Point d'entrée principal (Nova.Signal, Nova.Math, Nova.Table)
     ├── Signal/
     │   ├── init.lua          ← Expose Signal.lua
     │   └── Signal.lua        ← Classe Signal complète
-    └── Math/
-        ├── init.lua          ← Agrège tous les sous-modules Math
-        ├── Interpolation.lua ← lerp, smoothLerp, easeIn, easeOut, easeInOut
-        ├── Clamp.lua         ← clamp, clampMin, clampMax
-        ├── Rounding.lua      ← round, floor, ceil, roundTo
-        ├── Geometry.lua      ← distance2D, distance3D, angleBetween, normalize2D, isInRange2D
-        └── Random.lua        ← randomFloat, randomInt, randomSign, chance, randomAngle
+    ├── Math/
+    │   ├── init.lua          ← Agrège tous les sous-modules Math
+    │   ├── Interpolation.lua ← lerp, smoothLerp, easeIn, easeOut, easeInOut
+    │   ├── Clamp.lua         ← clamp, clampMin, clampMax
+    │   ├── Rounding.lua      ← round, floor, ceil, roundTo
+    │   ├── Geometry.lua      ← distance2D, distance3D, angleBetween, normalize2D, isInRange2D
+    │   └── Random.lua        ← randomFloat, randomInt, randomSign, chance, randomAngle
+    └── Table/
+        ├── init.lua          ← Agrège tous les sous-modules Table
+        ├── Copy.lua          ← shallowCopy, deepCopy
+        ├── Mutation.lua      ← merge, filter, map, reverse, shuffle
+        └── Search.lua        ← find, findAll, contains, isEmpty
 ```
 
 ---
@@ -284,9 +294,110 @@ Usage : direction de spawn d'ennemi autour du joueur.
 
 ---
 
-### `Nova.Table` *(à venir)*
+### `Nova.Table`
 
-Utilitaires de manipulation de tables : `deepCopy`, `merge`, `shuffle`, `filter`, etc.
+Utilitaires de manipulation de tables regroupés en 3 sous-modules. Toutes les fonctions sont accessibles via `Nova.Table.nomFonction()`.
+
+---
+
+#### Copy
+
+##### `Table.shallowCopy(t)` → `table`
+Copie superficielle : duplique uniquement le premier niveau de la table. Les sous-tables sont partagées par référence.
+Usage : dupliquer une liste simple sans sous-tables.
+```lua
+local copy = Nova.Table.shallowCopy(myTable)
+```
+
+##### `Table.deepCopy(t)` → `table`
+Copie profonde : duplique récursivement toute la structure, y compris les sous-tables.
+Usage : dupliquer un template d'ennemi depuis `WaveConfig` sans modifier l'original.
+```lua
+local enemy = Nova.Table.deepCopy(WaveConfig.Enemies.Goblin)
+```
+
+---
+
+#### Mutation
+
+##### `Table.merge(a, b)` → `table`
+Fusionne deux tables dans une nouvelle table. En cas de clé identique, `b` écrase `a`.
+Usage : fusionner stats de base + bonus d'upgrade au levelup.
+```lua
+local stats = Nova.Table.merge(baseStats, upgradeBonus)
+```
+
+##### `Table.filter(t, predicate)` → `table`
+Retourne une nouvelle table ne contenant que les éléments où `predicate` retourne `true`.
+Usage : garder uniquement les ennemis vivants dans une liste.
+```lua
+activeEnemies = Nova.Table.filter(activeEnemies, function(e)
+    return e.Humanoid.Health > 0
+end)
+```
+
+##### `Table.map(t, transform)` → `table`
+Retourne une nouvelle table où chaque élément est transformé par `transform`.
+Usage : extraire les positions de tous les ennemis, convertir des valeurs.
+```lua
+local positions = Nova.Table.map(enemies, function(e)
+    return e.HumanoidRootPart.Position
+end)
+```
+
+##### `Table.reverse(t)` → `table`
+Retourne une nouvelle table avec les éléments dans l'ordre inverse.
+Usage : itérer et supprimer des éléments sans décaler les indices.
+```lua
+local reversed = Nova.Table.reverse(myTable)
+```
+
+##### `Table.shuffle(t)` → `table`
+Mélange aléatoirement les éléments de la table en place (modifie la table originale).
+Usage : ordre de spawn aléatoire, mélanger les choix d'upgrades au levelup.
+```lua
+local upgrades = Nova.Table.shuffle(availableUpgrades)
+```
+
+---
+
+#### Search
+
+##### `Table.find(t, predicate)` → `any?`
+Retourne le premier élément où `predicate` retourne `true`, `nil` sinon.
+Usage : retrouver un ennemi précis dans une liste par propriété.
+```lua
+local boss = Nova.Table.find(enemies, function(e)
+    return e.Name == "Boss"
+end)
+```
+
+##### `Table.findAll(t, predicate)` → `table`
+Retourne tous les éléments où `predicate` retourne `true`.
+Usage : trouver tous les ennemis dans un certain rayon.
+```lua
+local nearbyEnemies = Nova.Table.findAll(enemies, function(e)
+    return Nova.Math.isInRange2D(player.Position, e.Position, 15)
+end)
+```
+
+##### `Table.contains(t, target)` → `boolean`
+Vérifie si une valeur est présente dans une table (comparaison directe).
+Usage : vérifier si un joueur est déjà dans une run.
+```lua
+if Nova.Table.contains(activePlayers, player) then
+    -- joueur déjà en run
+end
+```
+
+##### `Table.isEmpty(t)` → `boolean`
+Vérifie si une table est vide.
+Usage : vérifier si une vague est terminée (plus d'ennemis vivants).
+```lua
+if Nova.Table.isEmpty(activeEnemies) then
+    WaveCompleted:Fire()
+end
+```
 
 ---
 
@@ -320,4 +431,4 @@ EnemyDied:DisconnectAll()
 - [x] v0.1.0 — Signal (Connect, Fire, Disconnect, DisconnectAll)
 - [x] v0.2.0 — Signal:Wait()
 - [x] v0.3.0 — Nova.Math (Interpolation, Clamp, Rounding, Geometry, Random)
-- [ ] v0.4.0 — Nova.Table (deepCopy, merge, shuffle, filter)
+- [x] v0.4.0 — Nova.Table (Copy, Mutation, Search)
