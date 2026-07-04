@@ -432,3 +432,13 @@ EnemyDied:DisconnectAll()
 - [x] v0.2.0 — Signal:Wait()
 - [x] v0.3.0 — Nova.Math (Interpolation, Clamp, Rounding, Geometry, Random)
 - [x] v0.4.0 — Nova.Table (Copy, Mutation, Search)
+
+---
+
+## Modules connexes
+
+### `DevTools` (frère de Nova, pas un sous-module)
+
+Vit à côté de Nova dans `ReplicatedStorage/DevTools`, mais reste **volontairement séparé** : contient des outils de dev/test (sprint, fly) qui dépendent d'API **client uniquement** (`UserInputService`, `BodyVelocity`, caméra). Nova doit rester utilisable depuis un `Script` serveur ou un `LocalScript` sans distinction — un module qui casse cette garantie ne peut pas vivre dans Nova, même s'il suit le même pattern de dossier-as-module et de README versionné.
+
+Voir `DevTools/README.md` pour la doc complète (`DevTools.Movement.Sprint`, `DevTools.Movement.Fly`).
